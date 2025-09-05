@@ -1,8 +1,13 @@
-from db import get_session
-from models import transaction
+from sqlmodel import select
 
-# TODO:read from categories table and get the number of categories
-NUM_CATEGORY = 5
+from db import get_session
+from models import category, transaction
+
+
+def get_number_of_categories() -> int:
+    """select/read the id column from the categories table and return number of categories"""
+    with get_session() as session:
+        return len(session.exec(select(category.id)).all())
 
 
 def create_transaction() -> transaction:
@@ -15,7 +20,7 @@ def create_transaction() -> transaction:
         except TypeError:
             print("Please input a number.")
             continue
-        if category_index > NUM_CATEGORY:
+        if category_index > get_number_of_categories():
             print("Please select from the given categories.")
             continue
         else:
@@ -25,12 +30,17 @@ def create_transaction() -> transaction:
 
 
 def add_transactions():
-    session = get_session()
-    while True:
-        session.add(create_transaction())
-        continue_session = (
-            input("Any other transactions to be added(Y/N)").strip().lower()
-        )
-        if continue_session == "N":
-            break
-    session.commit()
+    added_transactions = []
+    with get_session() as session:
+        while True:
+            new_transaction = create_transaction()
+            added_transactions.append(new_transaction)
+            continue_session = (
+                input("Any other transactions to be added(Y/N)").strip().lower()
+            )
+            if continue_session == "N":
+                break
+        session.add_all(added_transactions)
+        session.commit()
+        for added_transaction in added_transactions:
+            session.refresh(added_transaction)
