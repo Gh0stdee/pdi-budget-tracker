@@ -101,11 +101,16 @@ def main():
                 console.print("The transaction has been added.")
             break
         elif choice == Functions.SUMMARY:
-            for category, used_budget, budget in get_budget_info():
-                console.print(f"For {category}: ")
+            for category in get_budget_info():
+                console.print(f"For {category.category_name}: ")
                 console.print(
-                    f"You have allocated ${budget} and spent ${used_budget}[{used_budget/budget*100:.2f}%]."
+                    f"You have allocated ${category.budget} and spent ${category.used_budget}[{category.used_budget / category.budget * 100:.2f}%]."
                 )
+                console.print("\nTracnsactions: ")
+                for transaction in category.transactions:
+                    console.print(
+                        f"- ${transaction.amount} for {transaction.remark} {'(recurring)' if transaction.recurrence else ''}"
+                    )
                 console.print()
             break
         elif choice == Functions.QUIT:

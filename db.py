@@ -1,5 +1,6 @@
 from decouple import config
 from sqlmodel import Session, SQLModel, create_engine, select
+from sqlalchemy.orm import selectinload
 
 from models import Category, Transaction
 
@@ -60,8 +61,8 @@ def update_used_budget(session: Session, amount: float, category_id: int) -> boo
     return category.used_budget > category.budget
 
 
-def get_budget_info():
+def get_budget_info() -> list[Category]:
     with get_session() as session:
         return session.exec(
-            select(Category.category_name, Category.used_budget, Category.budget)
+            select(Category).options(selectinload(Category.transactions))
         ).all()
