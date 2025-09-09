@@ -106,7 +106,7 @@ def main():
                 console.print(
                     f"You have allocated ${category.budget} and spent ${category.used_budget}[{category.used_budget / category.budget * 100:.2f}%]."
                 )
-                console.print("\nTracnsactions: ")
+                console.print("\nTransactions: ")
                 for transaction in category.transactions:
                     console.print(
                         f"- ${transaction.amount} for {transaction.remark} {'(recurring)' if transaction.recurrence else ''}"
