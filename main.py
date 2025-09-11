@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+import plotext as plt
 from rich.console import Console
 
 from database_feature.db import (
@@ -38,18 +39,34 @@ def print_all_functions():
 
 def print_summary():
     console.print()
+    categories = []
+    used_budget = []
+    allocated_budget = []
     for category in get_budget_info():
+        categories.append(category.category_name)
+        allocated_budget.append(category.budget)
+        used_budget.append(category.used_budget)
         console.print(f"For the {category.category_name} category:")
         console.print(
             f"You have allocated ${category.budget} and spent ${category.used_budget}[{category.used_budget / category.budget * 100:.2f}%]."
         )
         console.print("\nTransactions: ")
+        if not category.transactions:
+            console.print("No transaction in this category yet.")
         for transaction in category.transactions:
             console.print(
                 f"- ${transaction.amount} for {transaction.remark} {'(recurring)' if transaction.recurrence else ''}"
             )
             console.print()
         console.rule()
+    plt.simple_multiple_bar(
+        categories,
+        [allocated_budget, used_budget],
+        labels=["Allocated budget", "Used budget"],
+        width=250,
+        title="Budget Usage for All Categories",
+    )
+    plt.show()
 
 
 def main():
@@ -114,7 +131,6 @@ def main():
             console.rule()
             break
         elif choice == Functions.SUMMARY:
-            # TODO: use the plt here!
             print_summary()
             break
         elif choice == Functions.QUIT:
