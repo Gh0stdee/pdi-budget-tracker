@@ -26,9 +26,13 @@ def create_category(category_name: str, budget: int, engine=engine):
 
 
 def add_transaction_and_check_budget_deficit(
-    amount: float, remark: str, category_id: int, recurrence: bool = False
+    amount: float,
+    remark: str,
+    category_id: int,
+    recurrence: bool = False,
+    engine=engine,
 ) -> bool:
-    with get_session() as session:
+    with get_session(engine) as session:
         new_transaction = Transaction(
             amount=amount, remark=remark, recurrence=recurrence, category_id=category_id
         )
@@ -38,17 +42,17 @@ def add_transaction_and_check_budget_deficit(
         return update_used_budget(session, amount, category_id)
 
 
-def get_category_id(category_name: str) -> int:
+def get_category_id(category_name: str, engine=engine) -> int:
     """Get the category id for the corresponsing category"""
-    with get_session() as session:
+    with get_session(engine) as session:
         return session.exec(
             select(Category.id).where(Category.category_name == category_name)
         ).one()
 
 
-def get_categories():
+def get_categories(engine=engine):
     """Get the list of all created categories"""
-    with get_session() as session:
+    with get_session(engine) as session:
         return session.exec(select(Category.category_name)).all()
 
 
@@ -61,8 +65,8 @@ def update_used_budget(session: Session, amount: float, category_id: int) -> boo
     return category.used_budget > category.budget
 
 
-def get_budget_info() -> list[Category]:
-    with get_session() as session:
+def get_budget_info(engine=engine) -> list[Category]:
+    with get_session(engine) as session:
         return session.exec(
             select(Category).options(selectinload(Category.transactions))
         ).all()
