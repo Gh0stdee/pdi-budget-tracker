@@ -2,7 +2,7 @@ from enum import IntEnum
 
 from rich.console import Console
 
-from db import (
+from database_feature.db import (
     add_transaction_and_check_budget_deficit,
     create_category,
     get_budget_info,
@@ -36,9 +36,20 @@ def print_all_functions():
     console.print()
 
 
-def test():
-    init_db()
-    console.print(get_category_id("Transportation"))
+def print_summary():
+    console.print()
+    for category in get_budget_info():
+        console.print(f"For the {category.category_name} category:")
+        console.print(
+            f"You have allocated ${category.budget} and spent ${category.used_budget}[{category.used_budget / category.budget * 100:.2f}%]."
+        )
+        console.print("\nTransactions: ")
+        for transaction in category.transactions:
+            console.print(
+                f"- ${transaction.amount} for {transaction.remark} {'(recurring)' if transaction.recurrence else ''}"
+            )
+            console.print()
+        console.rule()
 
 
 def main():
@@ -64,6 +75,7 @@ def main():
                     console.print(NON_NUMBER_WARNING)
                     console.print()
             create_category(category_name, budget)
+            console.rule()
             break
         elif choice == Functions.TRANSACTION:
             categories = get_categories()
@@ -99,26 +111,17 @@ def main():
                 )
             else:
                 console.print("The transaction has been added.")
+            console.rule()
             break
         elif choice == Functions.SUMMARY:
-            for category in get_budget_info():
-                console.print(f"For {category.category_name}: ")
-                console.print(
-                    f"You have allocated ${category.budget} and spent ${category.used_budget}[{category.used_budget / category.budget * 100:.2f}%]."
-                )
-                console.print("\nTransactions: ")
-                for transaction in category.transactions:
-                    console.print(
-                        f"- ${transaction.amount} for {transaction.remark} {'(recurring)' if transaction.recurrence else ''}"
-                    )
-                console.print()
+            # TODO: use the plt here!
+            print_summary()
             break
         elif choice == Functions.QUIT:
             break
         else:
             console.print(UNAVAILABLE_CHOICE_WARNING)
             console.print()
-    console.rule()
     console.print()
 
 

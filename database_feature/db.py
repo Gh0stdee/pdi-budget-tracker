@@ -1,25 +1,25 @@
 from decouple import config
-from sqlmodel import Session, SQLModel, create_engine, select
 from sqlalchemy.orm import selectinload
+from sqlmodel import Session, SQLModel, create_engine, select
 
-from models import Category, Transaction
+from .models import Category, Transaction
 
 SQLLITE_URL = config("DATABASE")
 
 engine = create_engine(SQLLITE_URL, echo=False)
 
 
-def init_db():
+def init_db(engine=engine):
     SQLModel.metadata.create_all(engine)
 
 
-def get_session() -> Session:
+def get_session(engine=engine) -> Session:
     return Session(engine)
 
 
-def create_category(category_name: str, budget: int):
-    with get_session() as session:
-        new_category = Category(category_name=category_name, budget=budget)
+def create_category(category_name: str, budget: int, engine=engine):
+    with get_session(engine) as session:
+        new_category = Category(category_name=category_name.title(), budget=budget)
         session.add(new_category)
         session.commit()
         session.refresh(new_category)
