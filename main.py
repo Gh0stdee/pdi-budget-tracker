@@ -63,7 +63,7 @@ def print_summary():
         categories,
         [allocated_budget, used_budget],
         labels=["Allocated budget", "Used budget"],
-        width=plt.terminal_width(),
+        width=plt.terminal_size()[0] - 10,
         title="Budget Usage for All Categories",
     )
     plt.show()
