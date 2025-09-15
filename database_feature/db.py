@@ -29,7 +29,7 @@ def add_transaction_and_check_budget_deficit(
     amount: float,
     remark: str,
     category_id: int,
-    recurrence: bool = False,
+    recurrence: bool,
     engine=engine,
 ) -> bool:
     with get_session(engine) as session:
@@ -45,9 +45,14 @@ def add_transaction_and_check_budget_deficit(
 def get_category_id(category_name: str, engine=engine) -> int:
     """Get the category id for the corresponsing category"""
     with get_session(engine) as session:
-        return session.exec(
-            select(Category.id).where(Category.category_name == category_name)
-        ).one()
+        if category_name.title() in get_categories():
+            return session.exec(
+                select(Category.id).where(
+                    Category.category_name == category_name.title()
+                )
+            ).one()
+        else:
+            return -1
 
 
 def get_categories(engine=engine):

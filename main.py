@@ -63,7 +63,7 @@ def print_summary():
         categories,
         [allocated_budget, used_budget],
         labels=["Allocated budget", "Used budget"],
-        width=250,
+        width=plt.terminal_width(),
         title="Budget Usage for All Categories",
     )
     plt.show()
@@ -122,7 +122,9 @@ def main():
                     console.print()
 
             remark = console.input("Insert any remarks about the transaction: ")
-            if add_transaction_and_check_budget_deficit(amount, remark, category_id):
+            if add_transaction_and_check_budget_deficit(
+                amount, remark, category_id, False
+            ):
                 console.print(
                     f"You have exceeded the budget set for the {category_name} category."
                 )
