@@ -37,7 +37,7 @@ def add_transaction_cmd(
     amount: float = float(amount)
     recurrence: bool = bool(recurrence.title() == "True")
     category_id = db.get_category_id(category)
-    if category_id == -1:
+    if category_id is None:
         console.print("Invalid category.")
         return
     budget_deficit = db.add_transaction_and_check_budget_deficit(

@@ -42,17 +42,19 @@ def add_transaction_and_check_budget_deficit(
         return update_used_budget(session, amount, category_id)
 
 
-def get_category_id(category_name: str, engine=engine) -> int:
-    """Get the category id for the corresponsing category"""
+def get_all_category_name_and_id() -> list[str, int]:
     with get_session(engine) as session:
-        if category_name.title() in get_categories():
-            return session.exec(
-                select(Category.id).where(
-                    Category.category_name == category_name.title()
-                )
-            ).one()
-        else:
-            return -1
+        return session.exec(select(Category.category_name, Category.id)).all()
+
+
+def get_category_id(category_name_input: str, engine=engine) -> int | None:
+    """Get the category id for the corresponsing category"""
+    category_name_id = get_all_category_name_and_id()
+    category_name_input = category_name_input.strip().title()
+    for category_name, category_id in category_name_id:
+        if category_name == category_name_input:
+            return category_id
+    return None
 
 
 def get_categories(engine=engine):
