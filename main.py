@@ -78,13 +78,14 @@ def main():
             while True:
                 try:
                     budget = float(
-                        console.input("What is the monthly budget for this category? ")
+                        console.input("What is the monthly budget for this category? $")
                     )
                     break
                 except ValueError:
                     console.print(NON_NUMBER_WARNING)
                     console.print()
             db.create_category(category_name, budget)
+            console.print(f"{category_name.title()} category has been created.")
             console.rule()
             break
         elif choice == Functions.TRANSACTION:
