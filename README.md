@@ -1,5 +1,9 @@
 # pdi-budget-tracker
 
+Database interaction handled by [SQLModel](https://sqlmodel.tiangolo.com/)
+
+Functionalities can be called with command line interface (enabled using [Typer](https://typer.tiangolo.com/))
+
 ## Setup
 ```
 git clone https://github.com/Gh0stdee/pdi-budget-tracker.git
