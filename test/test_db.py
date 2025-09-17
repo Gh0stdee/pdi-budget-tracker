@@ -1,36 +1,25 @@
 import pytest
-from sqlmodel import SQLModel, create_engine, select
+from sqlmodel import select
 
-from database_feature.db import (
-    add_transaction_and_check_budget_deficit,
-    create_category,
-    get_budget_info,
-    get_categories,
-    get_category_id,
-    get_session,
-    init_db,
-    update_used_budget,
-)
+from database_feature.db import Database
 from database_feature.models import Category
 
-TEST_DATABASE = "sqlite:///test.db"
+TEST_DATABASE = "sqlite://"
 
 
 @pytest.fixture
-def create_test_engine():
-    engine = create_engine(TEST_DATABASE, echo=False)
-    yield engine
-    SQLModel.metadata.drop_all(engine)
+def test_db():
+    db = Database(TEST_DATABASE)
+    return db
 
 
 @pytest.mark.parametrize(
     "category, budget, expected",
     [("pet", 300, [("Pet", 300)]), ("entertainment", 500, [("Entertainment", 500)])],
 )
-def test_create_category(create_test_engine, category, budget, expected):
-    init_db(create_test_engine)
-    create_category(category, budget, create_test_engine)
-    with get_session(create_test_engine) as session:
+def test_create_category(test_db, category, budget, expected):
+    test_db.create_category(category, budget)
+    with test_db.get_session() as session:
         result = session.exec(select(Category.category_name, Category.budget)).all()
         assert result == expected
 
@@ -43,20 +32,18 @@ def test_create_category(create_test_engine, category, budget, expected):
     ],
 )
 def test_get_category_id(
-    create_test_engine, category1, category2, budget1, budget2, test_category, expected
+    test_db, category1, category2, budget1, budget2, test_category, expected
 ):
-    init_db(create_test_engine)
-    create_category(category1, budget1, create_test_engine)
-    create_category(category2, budget2, create_test_engine)
-    assert get_category_id(test_category, create_test_engine) == expected
+    test_db.create_category(category1, budget1)
+    test_db.create_category(category2, budget2)
+    assert test_db.get_category_id(test_category) == expected
 
 
 @pytest.mark.parametrize("category,budget,amount,id", [("transport", 240, 4.5, 1)])
-def test_update_used_budget(create_test_engine, category, budget, amount, id):
-    init_db(create_test_engine)
-    create_category(category, budget, create_test_engine)
-    with get_session(create_test_engine) as session:
-        update_used_budget(session, amount, id)
+def test_update_used_budget(test_db, category, budget, amount, id):
+    test_db.create_category(category, budget)
+    with test_db.get_session() as session:
+        test_db.update_used_budget(session, amount, id)
         assert session.exec(select(Category.used_budget)).one() == amount
 
 
@@ -68,14 +55,11 @@ def test_update_used_budget(create_test_engine, category, budget, amount, id):
     ],
 )
 def test_add_transaction_and_check_budget_deficit(
-    create_test_engine, category, budget, amount, remark, id, expected
+    test_db, category, budget, amount, remark, id, expected
 ):
-    init_db(create_test_engine)
-    create_category(category, budget, create_test_engine)
+    test_db.create_category(category, budget)
     assert (
-        add_transaction_and_check_budget_deficit(
-            amount, remark, id, engine=create_test_engine
-        )
+        test_db.add_transaction_and_check_budget_deficit(amount, remark, id, False)
         == expected
     )
 
@@ -87,13 +71,10 @@ def test_add_transaction_and_check_budget_deficit(
         ("food", 2400, "transport", 240, ["Food", "Transport"]),
     ],
 )
-def test_get_categories(
-    category1, budget1, category2, budget2, expected, create_test_engine
-):
-    init_db(create_test_engine)
-    create_category(category1, budget1, create_test_engine)
-    create_category(category2, budget2, create_test_engine)
-    assert get_categories(create_test_engine) == expected
+def test_get_categories(category1, budget1, category2, budget2, expected, test_db):
+    test_db.create_category(category1, budget1)
+    test_db.create_category(category2, budget2)
+    assert test_db.get_categories() == expected
 
 
 @pytest.mark.parametrize(
@@ -101,17 +82,10 @@ def test_get_categories(
     [("transport", 240, 4.5, "MTR", 8.1, "Bus", 1)],
 )
 def test_get_budget_info(
-    category, budget, amount1, remark1, amount2, remark2, id, create_test_engine
+    category, budget, amount1, remark1, amount2, remark2, id, test_db
 ):
-    init_db(create_test_engine)
-    create_category(category, budget, create_test_engine)
-    add_transaction_and_check_budget_deficit(
-        amount1, remark1, id, engine=create_test_engine
-    )
-    add_transaction_and_check_budget_deficit(
-        amount2, remark2, id, engine=create_test_engine
-    )
-    with get_session(create_test_engine) as session:
-        assert (
-            get_budget_info(create_test_engine) == session.exec(select(Category)).all()
-        )
+    test_db.create_category(category, budget)
+    test_db.add_transaction_and_check_budget_deficit(amount1, remark1, id, False)
+    test_db.add_transaction_and_check_budget_deficit(amount2, remark2, id, False)
+    with test_db.get_session() as session:
+        assert test_db.get_budget_info() == session.exec(select(Category)).all()

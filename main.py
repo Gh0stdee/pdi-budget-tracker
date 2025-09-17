@@ -3,18 +3,12 @@ from enum import IntEnum
 import plotext as plt
 from rich.console import Console
 
-from database_feature.db import (
-    add_transaction_and_check_budget_deficit,
-    create_category,
-    get_budget_info,
-    get_categories,
-    get_category_id,
-    init_db,
-)
+from database_feature.db import Database
 
 FUNCTIONS: list[str] = ["Create Category", "Add Transaction", "Show Summary", "Quit"]
 FUNCTION_SELECTION: str = "Please select a function: "
-NON_NUMBER_WARNING: str = "Please enter an number."
+NUMBER_WARNING: str = "Please enter a positive number."
+INVALID_CATEGORY_WARNING: str = "Please choose from the created categories."
 UNAVAILABLE_CHOICE_WARNING: str = "Please choose from the above functions."
 CATEGORY_NAME_INPUT: str = "Please name the category: "
 QUIT = "Quit"
@@ -37,12 +31,12 @@ def print_all_functions():
     console.print()
 
 
-def print_summary():
+def print_summary(db: Database):
     console.print()
     categories = []
     used_budget = []
     allocated_budget = []
-    for category in get_budget_info():
+    for category in db.get_budget_info():
         categories.append(category.category_name)
         allocated_budget.append(category.budget)
         used_budget.append(category.used_budget)
@@ -70,14 +64,16 @@ def print_summary():
 
 
 def main():
-    init_db()
+    db = Database()
     console.rule()
     print_all_functions()
     while True:
         try:
             choice = int(console.input(FUNCTION_SELECTION))
+            if choice < 0:
+                raise ValueError
         except ValueError:
-            console.print(NON_NUMBER_WARNING)
+            console.print(NUMBER_WARNING)
             console.print()
             continue
         if choice == Functions.CATEGORY:
@@ -85,44 +81,54 @@ def main():
             while True:
                 try:
                     budget = float(
-                        console.input("What is the monthly budget for this category? ")
+                        console.input("What is the monthly budget for this category? $")
                     )
                     break
                 except ValueError:
-                    console.print(NON_NUMBER_WARNING)
+                    console.print(NUMBER_WARNING)
                     console.print()
-            create_category(category_name, budget)
+            db.create_category(category_name, budget)
+            console.print(f"{category_name.title()} category has been created.")
             console.rule()
             break
         elif choice == Functions.TRANSACTION:
-            categories = get_categories()
+            categories = db.get_categories()
             categories.append(QUIT)
             for index, category in enumerate(categories, start=1):
                 console.print(f"{index}. {category}")
             while True:
                 try:
-                    category_name = categories[
+                    choice = (
                         int(console.input("Insert the transaction category number: "))
                         - 1
-                    ]
+                    )
+                    if choice < 0:
+                        console.print(INVALID_CATEGORY_WARNING)
+                        console.print()
+                        continue
+                    category_name = categories[choice]
                     break
                 except ValueError:
-                    console.print(NON_NUMBER_WARNING)
+                    console.print(NUMBER_WARNING)
+                    console.print()
+                except IndexError:
+                    console.print(INVALID_CATEGORY_WARNING)
                     console.print()
             if category_name == QUIT:
                 break
-
-            category_id = get_category_id(category_name)
+            category_id = db.get_category_id(category_name)
             while True:
                 try:
                     amount = float(console.input("Insert the transaction amount: $"))
+                    if amount < 0:
+                        raise ValueError
                     break
                 except ValueError:
-                    console.print(NON_NUMBER_WARNING)
+                    console.print(NUMBER_WARNING)
                     console.print()
 
             remark = console.input("Insert any remarks about the transaction: ")
-            if add_transaction_and_check_budget_deficit(
+            if db.add_transaction_and_check_budget_deficit(
                 amount, remark, category_id, False
             ):
                 console.print(
@@ -133,7 +139,7 @@ def main():
             console.rule()
             break
         elif choice == Functions.SUMMARY:
-            print_summary()
+            print_summary(db)
             break
         elif choice == Functions.QUIT:
             break
