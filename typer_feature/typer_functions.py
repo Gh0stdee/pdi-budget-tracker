@@ -1,7 +1,7 @@
 import typer
 
 from database_feature.db import Database
-from main import console, print_summary
+from main import NUMBER_WARNING, console, print_summary
 
 app = typer.Typer()
 
@@ -34,7 +34,13 @@ def add_transaction_cmd(
 ):
     """Add transaction to budget tracker"""
     db = Database()
-    amount: float = float(amount)
+    try:
+        amount: float = float(amount)
+        if amount < 0:
+            raise ValueError
+    except ValueError:
+        console.print(NUMBER_WARNING)
+        raise typer.Abort()
     recurrence: bool = bool(recurrence.title() == "True")
     category_id = db.get_category_id(category)
     if category_id is None:

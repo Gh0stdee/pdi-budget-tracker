@@ -44,18 +44,13 @@ class Database:
             session.refresh(new_transaction)
             return self.update_used_budget(session, amount, category_id)
 
-    def get_all_category_name_and_id(self) -> list[str, int]:
-        with self.get_session() as session:
-            return session.exec(select(Category.category_name, Category.id)).all()
-
     def get_category_id(self, category_name_input: str) -> int | None:
         """Get the category id for the corresponsing category"""
-        category_name_id = self.get_all_category_name_and_id()
         category_name_input = category_name_input.strip().title()
-        for category_name, category_id in category_name_id:
-            if category_name == category_name_input:
-                return category_id
-        return None
+        with self.get_session() as session:
+            return session.exec(
+                select(Category.id).where(Category.category_name == category_name_input)
+            ).first()
 
     def get_categories(self) -> list[str]:
         """Get the list of all created categories"""

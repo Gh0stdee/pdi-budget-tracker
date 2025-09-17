@@ -7,7 +7,8 @@ from database_feature.db import Database
 
 FUNCTIONS: list[str] = ["Create Category", "Add Transaction", "Show Summary", "Quit"]
 FUNCTION_SELECTION: str = "Please select a function: "
-NON_NUMBER_WARNING: str = "Please enter an number."
+NUMBER_WARNING: str = "Please enter a positive number."
+INVALID_CATEGORY_WARNING: str = "Please choose from the created categories."
 UNAVAILABLE_CHOICE_WARNING: str = "Please choose from the above functions."
 CATEGORY_NAME_INPUT: str = "Please name the category: "
 QUIT = "Quit"
@@ -69,8 +70,10 @@ def main():
     while True:
         try:
             choice = int(console.input(FUNCTION_SELECTION))
+            if choice < 0:
+                raise ValueError
         except ValueError:
-            console.print(NON_NUMBER_WARNING)
+            console.print(NUMBER_WARNING)
             console.print()
             continue
         if choice == Functions.CATEGORY:
@@ -82,7 +85,7 @@ def main():
                     )
                     break
                 except ValueError:
-                    console.print(NON_NUMBER_WARNING)
+                    console.print(NUMBER_WARNING)
                     console.print()
             db.create_category(category_name, budget)
             console.print(f"{category_name.title()} category has been created.")
@@ -95,13 +98,21 @@ def main():
                 console.print(f"{index}. {category}")
             while True:
                 try:
-                    category_name = categories[
+                    choice = (
                         int(console.input("Insert the transaction category number: "))
                         - 1
-                    ]
+                    )
+                    if choice < 0:
+                        console.print(INVALID_CATEGORY_WARNING)
+                        console.print()
+                        continue
+                    category_name = categories[choice]
                     break
                 except ValueError:
-                    console.print(NON_NUMBER_WARNING)
+                    console.print(NUMBER_WARNING)
+                    console.print()
+                except IndexError:
+                    console.print(INVALID_CATEGORY_WARNING)
                     console.print()
             if category_name == QUIT:
                 break
@@ -109,9 +120,11 @@ def main():
             while True:
                 try:
                     amount = float(console.input("Insert the transaction amount: $"))
+                    if amount < 0:
+                        raise ValueError
                     break
                 except ValueError:
-                    console.print(NON_NUMBER_WARNING)
+                    console.print(NUMBER_WARNING)
                     console.print()
 
             remark = console.input("Insert any remarks about the transaction: ")
