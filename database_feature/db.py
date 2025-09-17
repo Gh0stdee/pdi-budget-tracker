@@ -4,15 +4,15 @@ from sqlmodel import Session, SQLModel, create_engine, select
 
 from .models import Category, Transaction
 
-SQLLITE_URL: str = config("DATABASE")
+DATABASE_URL: str = config("DATABASE")
 
 
 class Database:
-    def __init__(self, database_url=SQLLITE_URL):
+    def __init__(self, database_url=DATABASE_URL):
         self.engine = create_engine(database_url, echo=False)
-        self.init()
+        self.create_table()
 
-    def init(self):
+    def create_table(self):
         SQLModel.metadata.create_all(self.engine)
 
     def get_session(self) -> Session:

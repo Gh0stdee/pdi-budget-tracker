@@ -1,17 +1,16 @@
 import pytest
-from sqlmodel import SQLModel, select
+from sqlmodel import select
 
 from database_feature.db import Database
 from database_feature.models import Category
 
-TEST_DATABASE = "sqlite:///test.db"
+TEST_DATABASE = "sqlite://"
 
 
 @pytest.fixture
 def test_db():
     db = Database(TEST_DATABASE)
-    yield db
-    SQLModel.metadata.drop_all(db.engine)
+    return db
 
 
 @pytest.mark.parametrize(
