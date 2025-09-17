@@ -1,18 +1,18 @@
 import typer
 
-import database_feature.db as db
+from database_feature.db import Database
 from main import console, print_summary
 
 app = typer.Typer()
 
 
-@app.command(name="create-category")
+@app.command(name="add-category")
 def create_category_cmd(
     category=typer.Argument(..., help="Name of new category"),
     budget=typer.Argument(..., help="Budget for new category"),
 ):
     """Add category to your budget tracker"""
-    db.init_db()
+    db = Database()
     db.create_category(category, budget)
     console.print(f"{category.title()} category has been created.")
 
@@ -20,7 +20,7 @@ def create_category_cmd(
 @app.command(name="show-category")
 def show_category_cmd():
     """Show all created categories"""
-    db.init_db()
+    db = Database()
     for category in db.get_categories():
         console.print(category)
 
@@ -33,7 +33,7 @@ def add_transaction_cmd(
     recurrence=typer.Option(False, help="Set recurring transaction"),
 ):
     """Add transaction to budget tracker"""
-    db.init_db()
+    db = Database()
     amount: float = float(amount)
     recurrence: bool = bool(recurrence.title() == "True")
     category_id = db.get_category_id(category)
@@ -54,5 +54,5 @@ def add_transaction_cmd(
 @app.command(name="print-summary")
 def print_summary_cmd():
     """Print budget summary for all categories"""
-    db.init_db()
-    print_summary()
+    db = Database()
+    print_summary(db)

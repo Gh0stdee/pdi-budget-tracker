@@ -3,14 +3,7 @@ from enum import IntEnum
 import plotext as plt
 from rich.console import Console
 
-from database_feature.db import (
-    add_transaction_and_check_budget_deficit,
-    create_category,
-    get_budget_info,
-    get_categories,
-    get_category_id,
-    init_db,
-)
+from database_feature.db import Database
 
 FUNCTIONS: list[str] = ["Create Category", "Add Transaction", "Show Summary", "Quit"]
 FUNCTION_SELECTION: str = "Please select a function: "
@@ -37,12 +30,12 @@ def print_all_functions():
     console.print()
 
 
-def print_summary():
+def print_summary(db: Database):
     console.print()
     categories = []
     used_budget = []
     allocated_budget = []
-    for category in get_budget_info():
+    for category in db.get_budget_info():
         categories.append(category.category_name)
         allocated_budget.append(category.budget)
         used_budget.append(category.used_budget)
@@ -70,7 +63,7 @@ def print_summary():
 
 
 def main():
-    init_db()
+    db = Database()
     console.rule()
     print_all_functions()
     while True:
@@ -91,11 +84,11 @@ def main():
                 except ValueError:
                     console.print(NON_NUMBER_WARNING)
                     console.print()
-            create_category(category_name, budget)
+            db.create_category(category_name, budget)
             console.rule()
             break
         elif choice == Functions.TRANSACTION:
-            categories = get_categories()
+            categories = db.get_categories()
             categories.append(QUIT)
             for index, category in enumerate(categories, start=1):
                 console.print(f"{index}. {category}")
@@ -111,8 +104,7 @@ def main():
                     console.print()
             if category_name == QUIT:
                 break
-
-            category_id = get_category_id(category_name)
+            category_id = db.get_category_id(category_name)
             while True:
                 try:
                     amount = float(console.input("Insert the transaction amount: $"))
@@ -122,7 +114,7 @@ def main():
                     console.print()
 
             remark = console.input("Insert any remarks about the transaction: ")
-            if add_transaction_and_check_budget_deficit(
+            if db.add_transaction_and_check_budget_deficit(
                 amount, remark, category_id, False
             ):
                 console.print(
@@ -133,7 +125,7 @@ def main():
             console.rule()
             break
         elif choice == Functions.SUMMARY:
-            print_summary()
+            print_summary(db)
             break
         elif choice == Functions.QUIT:
             break
